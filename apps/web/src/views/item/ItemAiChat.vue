@@ -193,117 +193,123 @@ onUnmounted(() => {
   <div ref="rootRef" class="item-ai-chat">
     <div ref="frameRef" class="item-ai-chat__frame">
       <div class="item-ai-chat__stage">
-        <!-- 缩小商品图（拍照优先，无图用参考稿） -->
-        <div class="item-ai-chat__thumb-wrap" @click.stop>
-          <img
-            :src="thumbSrc"
-            alt=""
-            class="item-ai-chat__thumb-img"
-            draggable="false"
-          >
-        </div>
-
-        <!-- 第一行：逐字出现 -->
-        <h2 class="item-ai-chat__prompt item-ai-chat__prompt--name" :aria-label="NAME_PROMPT">
-          <span
-            v-for="(ch, i) in namePromptChars"
-            :key="`np-${i}`"
-            class="item-ai-chat__title-char"
-            :class="{ 'item-ai-chat__title-char--show': namePromptRevealCount > i }"
-          >{{ ch }}</span>
-        </h2>
-
-        <!-- 名称：点小编辑图标输入；完成后名字显示在此区域 -->
-        <div class="item-ai-chat__name-slot" role="group" aria-label="物品名称">
-          <template v-if="!nameConfirmed">
-            <button
-              v-if="!nameEditing"
-              type="button"
-              class="item-ai-chat__name-edit-hit"
-              aria-label="输入名字"
-              @click="openNameEdit"
+        <!-- 顶部：缩小图 + 正下方「它叫什么名字？」 -->
+        <div class="item-ai-chat__top-stack">
+          <div class="item-ai-chat__thumb-wrap" @click.stop>
+            <img
+              :src="thumbSrc"
+              alt=""
+              class="item-ai-chat__thumb-img"
+              draggable="false"
             >
-              <img
-                :src="imgNameEdit"
-                alt=""
-                class="item-ai-chat__name-edit-icon"
-                width="22"
-                height="22"
-                draggable="false"
-              >
-            </button>
-            <div v-else class="item-ai-chat__name-inline">
-              <input
-                ref="nameInputRef"
-                v-model="nameInput"
-                type="text"
-                class="item-ai-chat__name-input-inline"
-                placeholder="输入名字"
-                enterkeyhint="done"
-                autocomplete="off"
-                @keydown.enter.prevent="confirmName"
-              >
+          </div>
+
+          <h2 class="item-ai-chat__prompt item-ai-chat__prompt--name" :aria-label="NAME_PROMPT">
+            <span
+              v-for="(ch, i) in namePromptChars"
+              :key="`np-${i}`"
+              class="item-ai-chat__title-char"
+              :class="{ 'item-ai-chat__title-char--show': namePromptRevealCount > i }"
+            >{{ ch }}</span>
+          </h2>
+
+          <!-- 名称：点小编辑图标输入；完成后名字显示在此区域 -->
+          <div class="item-ai-chat__name-slot" role="group" aria-label="物品名称">
+            <template v-if="!nameConfirmed">
               <button
+                v-if="!nameEditing"
                 type="button"
-                class="item-ai-chat__name-inline-ok"
-                aria-label="确定名称"
-                @click="confirmName"
+                class="item-ai-chat__name-edit-hit"
+                aria-label="输入名字"
+                @click="openNameEdit"
               >
-                确定
+                <img
+                  :src="imgNameEdit"
+                  alt=""
+                  class="item-ai-chat__name-edit-icon"
+                  width="22"
+                  height="22"
+                  draggable="false"
+                >
               </button>
-            </div>
-          </template>
-          <p v-else class="item-ai-chat__name-done">
-            {{ draftItemTitle }}
-          </p>
+              <div v-else class="item-ai-chat__name-inline">
+                <input
+                  ref="nameInputRef"
+                  v-model="nameInput"
+                  type="text"
+                  class="item-ai-chat__name-input-inline"
+                  placeholder="输入名字"
+                  enterkeyhint="done"
+                  autocomplete="off"
+                  @keydown.enter.prevent="confirmName"
+                >
+                <button
+                  type="button"
+                  class="item-ai-chat__name-inline-ok"
+                  aria-label="确定名称"
+                  @click="confirmName"
+                >
+                  确定
+                </button>
+              </div>
+            </template>
+            <p v-else class="item-ai-chat__name-done">
+              {{ draftItemTitle }}
+            </p>
+          </div>
         </div>
 
-        <!-- repeat -->
-        <button
-          type="button"
-          class="item-ai-chat__repeat"
-          aria-label="重试"
-          @click="onRepeat"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M5.5 10.5a6.5 6.5 0 1 1 2.2 4.9"
-              stroke="#7C66FF"
-              stroke-width="2"
-              stroke-linecap="round"
-              fill="none"
-            />
-            <path
-              d="M5 6v4.5h4.5"
-              stroke="#7C66FF"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              fill="none"
-            />
-          </svg>
-        </button>
-
-        <!-- 中间：语音输入（手绘麦克风） -->
-        <button
-          type="button"
-          class="item-ai-chat__mic-hit"
-          aria-label="语音输入"
-        >
-          <img
-            :src="imgVoiceMic"
-            alt=""
-            class="item-ai-chat__mic-img"
-            width="68"
-            height="63"
-            draggable="false"
+        <!-- 底部三个小标：同一行底对齐 -->
+        <nav class="item-ai-chat__bottom-icons" aria-label="操作">
+          <button
+            type="button"
+            class="item-ai-chat__toolbar-btn item-ai-chat__repeat"
+            aria-label="重试"
+            @click="onRepeat"
           >
-        </button>
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M5.5 10.5a6.5 6.5 0 1 1 2.2 4.9"
+                stroke="#7C66FF"
+                stroke-width="2"
+                stroke-linecap="round"
+                fill="none"
+              />
+              <path
+                d="M5 6v4.5h4.5"
+                stroke="#7C66FF"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                fill="none"
+              />
+            </svg>
+          </button>
 
-        <!-- close -->
-        <button type="button" class="item-ai-chat__close" aria-label="关闭" @click="onClose">
-          <img :src="imgClose" alt="" width="24" height="24" >
-        </button>
+          <button
+            type="button"
+            class="item-ai-chat__toolbar-btn item-ai-chat__mic-hit"
+            aria-label="语音输入"
+          >
+            <img
+              :src="imgVoiceMic"
+              alt=""
+              class="item-ai-chat__mic-img"
+              width="28"
+              height="28"
+              draggable="false"
+            >
+          </button>
+
+          <button
+            type="button"
+            class="item-ai-chat__toolbar-btn item-ai-chat__close"
+            aria-label="关闭"
+            @click="onClose"
+          >
+            <img :src="imgClose" alt="" width="24" height="24" >
+          </button>
+        </nav>
 
         <!-- Dot Grid -->
         <div
@@ -389,9 +395,6 @@ $item-ai-font: var(--font-family-app);
 $item-ai-purple: #8470ff;
 $item-ai-purple-icon: #7c66ff;
 $item-ai-placeholder: #979797;
-$item-ai-icon-row-bottom: 436px;
-$item-ai-icon-sm: 24px;
-$item-ai-mic-h: 63px;
 
 .item-ai-chat {
   position: fixed;
@@ -423,19 +426,29 @@ $item-ai-mic-h: 63px;
   background: #ffffff;
 }
 
-/* 顶部缩小商品图：仅缩放，无衬底；下方紧贴第一行文案 */
-.item-ai-chat__thumb-wrap {
+/* 顶部：缩小图 + 紧接下方文案 */
+.item-ai-chat__top-stack {
   position: absolute;
-  left: 50%;
-  top: 120px;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 2;
+}
+
+.item-ai-chat__thumb-wrap {
+  position: relative;
   line-height: 0;
+  flex-shrink: 0;
 }
 
 .item-ai-chat__thumb-img {
   display: block;
-  width: 102px;
-  height: 102px;
+  width: 112px;
+  height: 112px;
   object-fit: contain;
 }
 
@@ -476,15 +489,20 @@ $item-ai-mic-h: 63px;
   z-index: 1;
 }
 
-.item-ai-chat__prompt--name {
-  top: 230px;
-  min-height: 40px;
-  color: #6e6e6e;
+.item-ai-chat__top-stack .item-ai-chat__prompt--name {
+  position: static;
+  left: auto;
+  right: auto;
+  width: 100%;
+  min-height: 0;
+  padding: 0 20px;
+  box-sizing: border-box;
+  color: #979797;
 }
 
 /* 点阵上方、左对齐 */
 .item-ai-chat__prompt--story {
-  top: calc(#{$item-ai-icon-row-bottom} + 8px + 22px);
+  top: 342px;
   left: 25px;
   right: 24px;
   width: auto;
@@ -495,17 +513,15 @@ $item-ai-mic-h: 63px;
 }
 
 .item-ai-chat__name-slot {
-  position: absolute;
-  left: 50%;
-  top: 264px;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
   min-width: 120px;
   max-width: 300px;
   min-height: 36px;
+  margin-top: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
 }
 
 .item-ai-chat__name-edit-hit {
@@ -585,30 +601,21 @@ $item-ai-mic-h: 63px;
   color: #000;
 }
 
-/* repeat — 与关闭、麦克风底边对齐 */
-.item-ai-chat__repeat {
+/* 底部三键：与底栏留白，图标底边对齐 */
+.item-ai-chat__bottom-icons {
   position: absolute;
-  left: 25px;
-  top: calc(#{$item-ai-icon-row-bottom} - #{$item-ai-icon-sm});
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
+  left: 0;
+  right: 0;
+  bottom: 76px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 25px;
+  box-sizing: border-box;
+  z-index: 3;
 }
 
-.item-ai-chat__mic-hit {
-  position: absolute;
-  left: 50%;
-  top: calc(#{$item-ai-icon-row-bottom} - #{$item-ai-mic-h});
-  width: 68px;
-  height: 63px;
-  margin-left: -34px;
+.item-ai-chat__toolbar-btn {
   padding: 0;
   border: none;
   background: transparent;
@@ -616,32 +623,31 @@ $item-ai-mic-h: 63px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
+}
+
+.item-ai-chat__repeat {
+  width: 24px;
+  height: 24px;
+}
+
+.item-ai-chat__mic-hit {
+  width: 28px;
+  height: 28px;
 }
 
 .item-ai-chat__mic-img {
   display: block;
-  width: 68px;
-  height: 63px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   pointer-events: none;
 }
 
-/* close */
 .item-ai-chat__close {
-  position: absolute;
-  left: 341px;
-  top: calc(#{$item-ai-icon-row-bottom} - #{$item-ai-icon-sm});
   width: 24px;
   height: 24px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
 
   img {
     display: block;
@@ -651,13 +657,13 @@ $item-ai-mic-h: 63px;
   }
 }
 
-/* Dot Grid（第二行文案叠在其上方偏左；紧接三图标行下方） */
+/* Dot Grid（第二行文案叠在其上方偏左） */
 .item-ai-chat__dot-grid {
   position: absolute;
   left: 25px;
-  top: calc(#{$item-ai-icon-row-bottom} + 8px);
+  top: 300px;
   width: 340px;
-  height: 330px;
+  height: 420px;
   background-repeat: no-repeat;
   background-position: 0 0;
   background-size: 340px 340px;

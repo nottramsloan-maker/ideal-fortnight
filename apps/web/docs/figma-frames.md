@@ -14,7 +14,7 @@
 | `/carriers/:id/items` | `views/item/ItemList.vue` | 待填 | 待填 |
 | `/items/new` | `views/item/ItemCapture.vue` | 待填 | 待填 |
 | `/items/:id/ai` | `views/item/ItemAiChat.vue` | 待填 | 待填 |
-| `/items/:id` | `views/item/ItemCard.vue` | 待填 | 待填 |
+| `/items/:id/card` | `views/item/ItemCard.vue` | 物品卡片（Done 后） | [node 150:769](https://www.figma.com/design/vt9q9x6LlIuiKtlIoLy6FR/%E8%8D%89%E7%A8%BF?node-id=150-769) |
 | `/share/preview/:carrierId` | `views/share/SharePreview.vue` | 待填（成品卡 §7.3.1） | 待填 |
 | `/p/:slug` | `views/share/PublicShareLanding.vue` | 待填（外链落地 §7.3.2） | 待填 |
 

@@ -9,5 +9,8 @@ export function usePoemPreview() {
   function onPointerUp() {
     showingOthers.value = false
   }
-  return { showingOthers, onPointerDown, onPointerUp }
+  function onPointerCancel() {
+    showingOthers.value = false
+  }
+  return { showingOthers, onPointerDown, onPointerUp, onPointerCancel }
 }

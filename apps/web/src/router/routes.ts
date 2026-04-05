@@ -71,7 +71,7 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: 'AI 对话' },
   },
   {
-    path: '/items/:id',
+    path: '/items/:id/card',
     name: 'item-card',
     component: () => import('../views/item/ItemCard.vue'),
     meta: { title: '物品卡片' },
