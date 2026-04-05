@@ -5,7 +5,8 @@
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@card-assets/*": ["../../暂存截图/卡片/*"]
     },
 
     /* Linting */
