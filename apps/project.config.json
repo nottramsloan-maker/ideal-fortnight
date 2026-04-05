@@ -1,10 +1,12 @@
 {
+  "description": "请改用仓库根目录打开微信开发者工具。本配置仅兜底：从 apps/ 误打开时仍指向 miniprogram。",
+  "miniprogramRoot": "../miniprogram/",
   "setting": {
     "es6": true,
     "postcss": true,
     "minified": true,
     "uglifyFileName": false,
-    "enhance": true,
+    "enhance": false,
     "packNpmRelationList": [],
     "babelSetting": {
       "ignore": [],
@@ -12,14 +14,29 @@
       "outputPath": ""
     },
     "useCompilerPlugins": false,
-    "minifyWXML": true
+    "minifyWXML": true,
+    "compileWorklet": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
   },
   "compileType": "miniprogram",
-  "simulatorPluginLibVersion": {},
   "packOptions": {
     "ignore": [],
     "include": []
   },
   "appid": "wx2b4ed502fcb12b6d",
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "widelyUsed",
+  "condition": {
+    "miniprogram": {
+      "current": -1,
+      "list": []
+    }
+  }
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useItemStore } from '@/stores/item'
 import imgGallery from '@/assets/figma/item-ai/btn-gallery.png'
 import imgDotGrid from '@/assets/figma/item-ai/dot-grid.png'
@@ -15,6 +15,7 @@ import imgNameEdit from '@/assets/figma/item-ai/icon-name-edit.png'
 import imgVoiceMic from '@/assets/figma/item-ai/btn-voice-mic.png'
 
 const router = useRouter()
+const route = useRoute()
 const itemStore = useItemStore()
 const { pendingCaptureObjectUrl, draftItemTitle } = storeToRefs(itemStore)
 
@@ -132,6 +133,7 @@ function onRepeat() {
   messageDraft.value = ''
   chatLines.value = []
   draftItemTitle.value = 'Spirit Drink'
+  itemStore.clearDraftStoryAndGallery()
   void nextTick().then(() => startNamePromptReveal())
 }
 
@@ -149,6 +151,10 @@ function confirmName() {
   startStoryPromptReveal()
 }
 
+function syncDraftStoryToStore() {
+  itemStore.setDraftStoryText(chatLines.value.map((l) => l.text).join('\n'))
+}
+
 function onMessageKeydown(ev: KeyboardEvent) {
   if (ev.key !== 'Enter') return
   ev.preventDefault()
@@ -157,19 +163,28 @@ function onMessageKeydown(ev: KeyboardEvent) {
   if (!t) return
   chatLines.value.push({ id: ++chatLineId, text: t })
   messageDraft.value = ''
+  syncDraftStoryToStore()
 }
 
 function openChatGallery() {
   chatFileRef.value?.click()
 }
 
-function onChatFileChange() {
-  const input = chatFileRef.value
-  if (input) input.value = ''
+function onChatFileChange(ev: Event) {
+  const input = ev.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (file) itemStore.addDraftGalleryFile(file)
+  input.value = ''
 }
 
 function onDone() {
-  router.push({ name: 'carrier-list' })
+  syncDraftStoryToStore()
+  const raw = route.params.id
+  const idStr = Array.isArray(raw) ? (raw[0] ?? 'new') : (raw ?? 'new')
+  void router.push({
+    name: 'item-card',
+    params: { id: idStr },
+  })
 }
 
 onMounted(() => {

@@ -1,5 +1,4 @@
 {
-  "libVersion": "3.15.1",
   "projectname": "ideal-fortnight",
   "setting": {
     "urlCheck": false,
@@ -9,7 +8,7 @@
     "preloadBackgroundData": false,
     "autoAudits": false,
     "showShadowRootInWxmlPanel": true,
-    "compileHotReLoad": true,
+    "compileHotReLoad": false,
     "useApiHook": true,
     "useStaticServer": false,
     "useLanDebug": false,

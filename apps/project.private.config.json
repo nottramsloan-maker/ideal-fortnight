@@ -1,6 +1,5 @@
 {
-  "libVersion": "3.15.1",
-  "projectname": "apps",
+  "projectname": "ideal-fortnight-apps",
   "setting": {
     "urlCheck": true,
     "coverView": true,

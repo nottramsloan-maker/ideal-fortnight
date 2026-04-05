@@ -1,11 +1,12 @@
 {
+  "description": "ideal-fortnight：请在微信开发者工具中打开本文件所在目录（仓库根目录），勿单独打开 apps/。",
   "miniprogramRoot": "miniprogram/",
   "setting": {
     "es6": true,
     "postcss": true,
     "minified": true,
     "uglifyFileName": false,
-    "enhance": true,
+    "enhance": false,
     "packNpmRelationList": [],
     "babelSetting": {
       "ignore": [],
@@ -25,12 +26,17 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
-  "simulatorPluginLibVersion": {},
   "packOptions": {
     "ignore": [],
     "include": []
   },
   "appid": "wx2b4ed502fcb12b6d",
   "editorSetting": {},
-  "libVersion": "3.15.1"
+  "libVersion": "widelyUsed",
+  "condition": {
+    "miniprogram": {
+      "current": -1,
+      "list": []
+    }
+  }
 }
