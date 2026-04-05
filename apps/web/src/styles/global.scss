@@ -6,11 +6,24 @@
   box-sizing: border-box;
 }
 
+html {
+  font-family: var(--font-family-app);
+  /* iOS WebView 避免自动放大「非系统字体」段落导致看起来像换字体 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 html,
 body,
 #app {
   margin: 0;
   min-height: 100%;
+}
+
+/* 路由页挂在 #app 下；子树统一指定，避免中间层未继承到自定义字体 */
+#app,
+#app * {
+  font-family: var(--font-family-app);
 }
 
 body {
@@ -25,7 +38,8 @@ button,
 input,
 select,
 textarea {
-  font-family: inherit;
+  /* inherit 在少数环境（尤其部分 web-view 的表单控件）不继承自定义字体 */
+  font-family: var(--font-family-app);
 }
 
 .page {

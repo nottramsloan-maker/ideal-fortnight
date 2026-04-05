@@ -1,15 +1,28 @@
 // 与 Figma Variables 同步；冲突以 Figma 为准（技术方案 §2.5）
-// 全站中英文字体：AaBeiYuLinShiDeXin（文件置于 public/fonts/）
-@font-face {
-  font-family: 'AaBeiYuLinShiDeXin';
-  src: url('/fonts/AaBeiYuLinShiDeXin-2.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
+// 字体文件由 Vite 处理 url()，避免 /fonts/ 绝对路径在子路径部署、部分 WebView 下失效
+// 非可变字体若只写 font-weight: 100 900，部分内核无法匹配 font-weight:600 等，会整段回退到系统字体
+
+$_app-font-file: url('../assets/fonts/AaBeiYuLinShiDeXin-2.ttf') format('truetype');
+
+@mixin app-font-faces($family-name) {
+  @each $w in 400, 500, 600, 700 {
+    @font-face {
+      font-family: $family-name;
+      src: $_app-font-file;
+      font-weight: $w;
+      font-style: normal;
+      font-display: swap;
+    }
+  }
 }
 
+@include app-font-faces('AaBeiYuLinShiDeXin');
+@include app-font-faces('AaBeiyulinshidexin');
+
 :root {
-  --font-family-app: 'AaBeiYuLinShiDeXin', ui-sans-serif, system-ui, sans-serif;
+  /* 全站中英文字体仅此一款 */
+  --font-family-app:
+    'AaBeiYuLinShiDeXin', 'AaBeiyulinshidexin', ui-sans-serif, system-ui, sans-serif;
   --color-primary: #8470ff;
   --color-primary-pressed: #6f5ce6;
   --color-text-primary: #1a1a1a;
