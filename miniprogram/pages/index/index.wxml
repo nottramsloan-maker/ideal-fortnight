@@ -1,0 +1,32 @@
+<view class="wrap">
+  <view class="card">
+    <text class="title">小程序工程已就绪</text>
+
+    <view class="warn">
+      <text class="warn-title">重要</text>
+      <text class="warn-text">个人主体注册的小程序通常无法使用 web-view 打开本地/线上 H5，会长期白屏。若已确认是个人主体，请用手机/电脑浏览器直接访问 H5 地址预览；要在此工具里嵌 H5，需企业主体小程序。</text>
+    </view>
+
+    <text class="desc">1. 终端先启动 H5（仓库已配置监听 0.0.0.0）：</text>
+    <text class="code">cd apps/web && npm run dev</text>
+    <text class="desc">2. 微信开发者工具 →「详情」→「本地设置」→ 勾选「不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书」。</text>
+    <text class="desc">3. 白屏时：把地址里的 127.0.0.1 换成运行 npm run dev 时终端里「Network」那一行的 IP（或系统设置里本机 Wi‑Fi IP）。</text>
+
+    <view class="quick-row">
+      <button class="btn ghost" bindtap="fillAvatarUrl">填入选头像</button>
+      <button class="btn ghost" bindtap="fillCarrierUrl">填入选载体</button>
+    </view>
+
+    <input
+      class="url-input"
+      type="text"
+      value="{{h5Input}}"
+      placeholder="http://IP:5173/onboarding/carrier"
+      bindinput="onH5Input"
+    />
+    <button class="btn primary" bindtap="openH5Preview">打开 H5 预览</button>
+    <button class="btn linklike" bindtap="showTroubleshoot">仍有问题？看排查说明</button>
+
+    <text class="desc muted">上线正式版需在公众平台配置 HTTPS 业务域名。</text>
+  </view>
+</view>

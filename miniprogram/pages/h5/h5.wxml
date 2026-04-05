@@ -1,0 +1,6 @@
+<web-view
+  wx:if="{{h5Url}}"
+  src="{{h5Url}}"
+  binderror="onWebViewError"
+></web-view>
+<view wx:else class="hint">未配置 H5 地址</view>

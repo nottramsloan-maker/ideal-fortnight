@@ -1,0 +1,4 @@
+{
+  "desc": "兴趣清单小程序",
+  "rules": [{ "action": "allow", "page": "*" }]
+}
