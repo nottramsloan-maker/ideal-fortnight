@@ -7,10 +7,10 @@
       <text class="warn-text">个人主体注册的小程序通常无法使用 web-view 打开本地/线上 H5，会长期白屏。若已确认是个人主体，请用手机/电脑浏览器直接访问 H5 地址预览；要在此工具里嵌 H5，需企业主体小程序。</text>
     </view>
 
-    <text class="desc">1. 终端先启动 H5（仓库已配置监听 0.0.0.0）：</text>
-    <text class="code">cd apps/web && npm run dev</text>
+    <text class="desc">1. 终端先启动 H5（微信 web-view 请用 dev:mini，避免 DevTools 在模拟器里报错）：</text>
+    <text class="code">cd apps/web; npm run dev:mini</text>
     <text class="desc">2. 微信开发者工具 →「详情」→「本地设置」→ 勾选「不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书」。</text>
-    <text class="desc">3. 白屏时：把地址里的 127.0.0.1 换成运行 npm run dev 时终端里「Network」那一行的 IP（或系统设置里本机 Wi‑Fi IP）。</text>
+    <text class="desc">3. 白屏时：把地址里的 127.0.0.1 换成运行 npm run dev 时终端里「Network」那一行的 IP（或系统设置里本机 Wi-Fi IP）。</text>
 
     <view class="quick-row">
       <button class="btn ghost" bindtap="fillAvatarUrl">填入选头像</button>

@@ -11,7 +11,7 @@
     "compileHotReLoad": false,
     "useApiHook": true,
     "useStaticServer": false,
-    "useLanDebug": false,
+    "useLanDebug": true,
     "showES6CompileOption": false,
     "checkInvalidKey": true,
     "ignoreDevUnusedFiles": true,

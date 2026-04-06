@@ -49,7 +49,16 @@ let titleRevealTimer: ReturnType<typeof setInterval> | undefined
 function continueNext() {
   if (!selectedKey.value) return
   carrierStore.onboardingTemplateKey = selectedKey.value
-  router.push({ name: 'onboarding-first-item' })
+  /** 「房间」走拍照第一件物品；其余载体进入与物品清单同构的物件 list（顶图为所选载体） */
+  if (selectedKey.value === 'room') {
+    router.push({ name: 'onboarding-first-item' })
+  } else {
+    carrierStore.addDirectoryCarrierIfNew(selectedKey.value)
+    router.push({
+      name: 'carrier-item-feed',
+      query: { carrier: selectedKey.value },
+    })
+  }
 }
 
 const bodyPrevOverflow = ref('')

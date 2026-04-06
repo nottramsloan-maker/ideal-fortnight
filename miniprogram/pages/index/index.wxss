@@ -1,5 +1,8 @@
 .wrap {
   padding: 48rpx 32rpx;
+  /* 自定义导航后需避开状态栏；constant 兼容旧版 iOS */
+  padding-top: calc(48rpx + constant(safe-area-inset-top));
+  padding-top: calc(48rpx + env(safe-area-inset-top));
   box-sizing: border-box;
 }
 

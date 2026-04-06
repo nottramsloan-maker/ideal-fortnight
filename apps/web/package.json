@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:mini": "vite --mode miniwebview",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
   },

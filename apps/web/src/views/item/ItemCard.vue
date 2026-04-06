@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useItemStore } from '@/stores/item'
 
 /** 点阵瓦片（素材为黑底白点，CSS invert 后叠白底呈灰点） */
@@ -37,9 +37,34 @@ const DEFAULT_STORY_LINES = [
 ]
 
 const router = useRouter()
+const route = useRoute()
 const itemStore = useItemStore()
 const { pendingCaptureObjectUrl, draftItemTitle, draftStoryText, draftGalleryObjectUrls } =
   storeToRefs(itemStore)
+
+const isCardViewMode = computed(() => route.name === 'item-card-view')
+const committedIdParam = computed(() => {
+  const id = route.params.committedId
+  return typeof id === 'string' ? id : ''
+})
+const committedRow = computed(() =>
+  isCardViewMode.value && committedIdParam.value
+    ? itemStore.findCommittedById(committedIdParam.value)
+    : null,
+)
+
+watch(
+  () => ({
+    name: route.name,
+    cid:
+      typeof route.params.committedId === 'string' ? route.params.committedId : '',
+  }),
+  ({ name, cid }) => {
+    if (name !== 'item-card-view') return
+    if (!cid || !itemStore.findCommittedById(cid)) void router.back()
+  },
+  { immediate: true },
+)
 
 const rootRef = ref<HTMLElement | null>(null)
 const frameRef = ref<HTMLElement | null>(null)
@@ -49,15 +74,33 @@ const bodyPrevOverflow = ref('')
 const FRAME_CSS_W = 390
 const FRAME_CSS_H = PANEL_H
 
+const paperTitle = computed(() => {
+  if (isCardViewMode.value) return committedRow.value?.title?.trim() || '物品'
+  return draftItemTitle.value
+})
+
 const displayStory = computed(() => {
+  if (isCardViewMode.value) {
+    const t = committedRow.value?.storyText?.trim()
+    if (t) return t
+    return DEFAULT_STORY_LINES.join('\n')
+  }
   const t = draftStoryText.value.trim()
   if (t) return t
   return DEFAULT_STORY_LINES.join('\n')
 })
 
-const scenePhotoSrc = computed(() => draftGalleryObjectUrls.value[0] ?? imgScene)
+const scenePhotoSrc = computed(() => {
+  if (isCardViewMode.value) {
+    return committedRow.value?.sceneImageUrl ?? imgScene
+  }
+  return draftGalleryObjectUrls.value[0] ?? imgScene
+})
 
-const heroSrc = computed(() => pendingCaptureObjectUrl.value)
+const heroSrc = computed(() => {
+  if (isCardViewMode.value) return committedRow.value?.imageUrl ?? null
+  return pendingCaptureObjectUrl.value
+})
 
 function updateFrameScale() {
   const root = rootRef.value
@@ -82,7 +125,14 @@ function onScrollToSecondPanel() {
 }
 
 function onPrimaryDone() {
-  router.push({ name: 'carrier-list' })
+  if (isCardViewMode.value) {
+    void router.back()
+    return
+  }
+  void itemStore.commitCurrentItemFromCard().finally(() => {
+    const loc = itemStore.consumeAfterCardNavigation()
+    void router.push(loc ?? { name: 'carrier-list' })
+  })
 }
 
 function onIconLike() {
@@ -137,7 +187,7 @@ onUnmounted(() => {
                   <img :src="imgPaper" alt="" class="item-card-gen__paper-img" draggable="false" >
                   <div class="item-card-gen__paper-overlay">
                     <p class="item-card-gen__paper-title">
-                      「{{ draftItemTitle }}」
+                      「{{ paperTitle }}」
                     </p>
                     <p class="item-card-gen__paper-body">
                       {{ displayStory }}
@@ -145,15 +195,31 @@ onUnmounted(() => {
                   </div>
                 </div>
 
-                <div class="item-card-gen__actions" role="toolbar" aria-label="卡片操作">
-                  <button type="button" class="item-card-gen__icon-btn" aria-label="喜欢" @click="onIconLike">
-                    <img :src="imgThumbsUp" alt="" width="34" height="34" >
-                  </button>
-                  <button type="button" class="item-card-gen__icon-btn" aria-label="再发一版" @click="onIconRepeat">
+                <div
+                  class="item-card-gen__actions"
+                  :class="{ 'item-card-gen__actions--solo': isCardViewMode }"
+                  role="toolbar"
+                  aria-label="卡片操作"
+                >
+                  <template v-if="!isCardViewMode">
+                    <button type="button" class="item-card-gen__icon-btn" aria-label="喜欢" @click="onIconLike">
+                      <img :src="imgThumbsUp" alt="" width="34" height="34" >
+                    </button>
+                    <button type="button" class="item-card-gen__icon-btn" aria-label="再发一版" @click="onIconRepeat">
+                      <img :src="imgRepeat" alt="" width="34" height="34" >
+                    </button>
+                    <button type="button" class="item-card-gen__icon-btn" aria-label="编辑" @click="onIconEdit">
+                      <img :src="imgCreate" alt="" width="34" height="34" >
+                    </button>
+                  </template>
+                  <button
+                    v-else
+                    type="button"
+                    class="item-card-gen__icon-btn"
+                    aria-label="再发一版"
+                    @click="onIconRepeat"
+                  >
                     <img :src="imgRepeat" alt="" width="34" height="34" >
-                  </button>
-                  <button type="button" class="item-card-gen__icon-btn" aria-label="编辑" @click="onIconEdit">
-                    <img :src="imgCreate" alt="" width="34" height="34" >
                   </button>
                 </div>
 
@@ -186,7 +252,10 @@ onUnmounted(() => {
                 :style="{ backgroundImage: `url(${imgDotTile})` }"
               />
             </div>
-            <div class="item-card-gen__panel-inner item-card-gen__panel-inner--bottom">
+            <div
+              class="item-card-gen__panel-inner item-card-gen__panel-inner--bottom"
+              :class="{ 'item-card-gen__panel-inner--bottom--view': isCardViewMode }"
+            >
               <div v-if="heroSrc" class="item-card-gen__product-wrap">
                 <img :src="heroSrc" alt="" class="item-card-gen__product" draggable="false" >
               </div>
@@ -201,7 +270,13 @@ onUnmounted(() => {
 
               <div class="item-card-gen__footer">
                 <button type="button" class="item-card-gen__done-hit" aria-label="完成" @click="onPrimaryDone">
-                  <img :src="imgDoneBtn" alt="" class="item-card-gen__done-img" draggable="false" >
+                  <img
+                    :src="imgDoneBtn"
+                    alt=""
+                    class="item-card-gen__done-img"
+                    :class="{ 'item-card-gen__done-img--view': isCardViewMode }"
+                    draggable="false"
+                  >
                 </button>
               </div>
             </div>
@@ -221,13 +296,17 @@ $item-gen-social-ink: #2c2c2c;
 /* 第一屏主内容区（撕纸～下箭头）相对设计稿等比 1.3；点阵背景不缩放 */
 $first-ui-scale: 1.3;
 
-/* 第二屏：语音条等宽约屏宽 80%；场景照为其 0.8；紫色 Done 为半稿宽 ×1.5，均水平居中 */
+/* 第二屏：语音条等宽约屏宽 80%；场景照 = 语音基准×0.8×0.8；Done = 半稿×1.5×0.8×0.8；均水平居中 */
 $second-wide-max: 312px;
-$second-scene-max: $second-wide-max * 0.8;
+$second-photo-done-scale: 0.8;
+$second-scene-max: $second-wide-max * 0.8 * $second-photo-done-scale;
 $second-bottle-max-w: 132px;
 $second-bottle-max-h: 170px;
-$second-scene-radius: 26px;
-$second-done-w: 108px * 1.5; /* 162px */
+$second-scene-radius: 26px * $second-photo-done-scale;
+$second-done-btn-scale: 0.8;
+$second-done-w: 108px * 1.5 * $second-photo-done-scale * $second-done-btn-scale;
+/* 场景图 + 下方 Done 相对语音条整体下移 */
+$second-scene-block-offset-y: 15px;
 
 .item-card-gen {
   position: fixed;
@@ -386,6 +465,29 @@ $second-done-w: 108px * 1.5; /* 162px */
   padding-left: 20px;
   padding-right: 20px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+
+  &--view {
+    padding-top: 52px;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+
+    .item-card-gen__product-wrap {
+      margin-bottom: 36px;
+    }
+
+    .item-card-gen__product {
+      max-width: calc(#{$second-bottle-max-w} * 1.14);
+      max-height: calc(#{$second-bottle-max-h} * 1.14);
+    }
+
+    .item-card-gen__voice-wrap {
+      margin-bottom: 38px;
+    }
+
+    .item-card-gen__scene-wrap {
+      margin-top: 32px;
+      margin-bottom: 36px;
+    }
+  }
 }
 
 .item-card-gen__paper-wrap {
@@ -460,6 +562,11 @@ $second-done-w: 108px * 1.5; /* 162px */
   gap: calc(40px * #{$first-ui-scale});
   flex-shrink: 0;
   margin-bottom: calc(20px * #{$first-ui-scale});
+
+  &--solo {
+    justify-content: center;
+    gap: 0;
+  }
 }
 
 .item-card-gen__icon-btn {
@@ -588,6 +695,7 @@ $second-done-w: 108px * 1.5; /* 162px */
   max-width: $second-scene-max;
   margin-left: auto;
   margin-right: auto;
+  margin-top: $second-scene-block-offset-y;
   margin-bottom: 22px;
   border-radius: $second-scene-radius;
   overflow: hidden;
@@ -629,7 +737,7 @@ $second-done-w: 108px * 1.5; /* 162px */
   }
 }
 
-/* Done：×1.5 后宽，在下方留白区水平垂直居中 */
+/* Done：半稿×1.5×0.8×0.8，在下方留白区水平垂直居中 */
 .item-card-gen__done-img {
   display: block;
   width: $second-done-w;
@@ -638,5 +746,10 @@ $second-done-w: 108px * 1.5; /* 162px */
   margin-left: auto;
   margin-right: auto;
   object-fit: contain;
+
+  &--view {
+    width: calc(#{$second-done-w} * 0.5);
+    max-width: 50%;
+  }
 }
 </style>

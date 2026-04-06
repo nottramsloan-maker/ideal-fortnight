@@ -1,5 +1,34 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import type { RouteLocationRaw } from 'vue-router'
+
+/** 载体清单里「已完成卡片」的一条（缩略图独立 object URL，避免与下一单拍照 revoke 冲突） */
+export type CarrierCommittedItem = {
+  id: string
+  title: string
+  date: string
+  imageUrl: string
+  /** 完成卡片时的故事正文，供查看页还原 */
+  storyText?: string
+  /** 完成时首张场景图副本（object URL） */
+  sceneImageUrl?: string | null
+}
+
+export type CommitListTarget = 'house' | 'feed'
+
+function formatDotDate(d: Date) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}.${m}.${day}`
+}
+
+function newCommittedId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
 
 export const useItemStore = defineStore('item', () => {
   const currentId = ref<string | null>(null)
@@ -10,6 +39,30 @@ export const useItemStore = defineStore('item', () => {
   const draftStoryText = ref('')
   /** 对话中上传的附图（object URL 列表） */
   const draftGalleryObjectUrls = ref<string[]>([])
+
+  /** 房子清单页：卡片完成后写入 */
+  const committedHouseItems = ref<CarrierCommittedItem[]>([])
+  /** 非房子载体 feed：卡片完成后写入；初始为空，仅展示已完成项 */
+  const committedFeedItems = ref<CarrierCommittedItem[]>([])
+
+  /** 当前拍照链完成后写入哪一份列表（在清单页点加号时设置） */
+  const commitListTarget = ref<CommitListTarget>('house')
+  /** 卡片页点「完成」后的跳转（用一次即清空）；未设置时默认回房子清单 */
+  const afterCardNavigation = ref<RouteLocationRaw | null>(null)
+
+  function setCommitListTarget(t: CommitListTarget) {
+    commitListTarget.value = t
+  }
+
+  function setAfterCardNavigation(loc: RouteLocationRaw | null) {
+    afterCardNavigation.value = loc
+  }
+
+  function consumeAfterCardNavigation(): RouteLocationRaw | null {
+    const v = afterCardNavigation.value
+    afterCardNavigation.value = null
+    return v
+  }
 
   function setPendingCapture(blob: Blob) {
     revokePendingCapture()
@@ -43,17 +96,83 @@ export const useItemStore = defineStore('item', () => {
     revokeDraftGallery()
   }
 
+  /**
+   * 从卡片页完成时调用：把当前拍照缩略复制为新的 object URL 写入清单，再释放草稿 capture。
+   * 仅在有 pending 图时入库；无图则只清空流程（仍应回列表）。
+   */
+  function findCommittedById(id: string): CarrierCommittedItem | null {
+    if (!id) return null
+    return (
+      committedHouseItems.value.find((r) => r.id === id) ??
+      committedFeedItems.value.find((r) => r.id === id) ??
+      null
+    )
+  }
+
+  async function commitCurrentItemFromCard() {
+    const url = pendingCaptureObjectUrl.value
+    if (!url) return
+
+    const title = draftItemTitle.value?.trim() || '新物品'
+    const date = formatDotDate(new Date())
+    const id = newCommittedId()
+    const target = commitListTarget.value
+    commitListTarget.value = 'house'
+    const storyText = draftStoryText.value.trim()
+
+    let sceneImageUrl: string | null = null
+    const g0 = draftGalleryObjectUrls.value[0]
+    if (g0) {
+      try {
+        const sb = await fetch(g0).then((r) => r.blob())
+        sceneImageUrl = URL.createObjectURL(sb)
+      } catch {
+        sceneImageUrl = g0
+      }
+    }
+
+    const pushRow = (imageUrl: string) => {
+      const row: CarrierCommittedItem = {
+        id,
+        title,
+        date,
+        imageUrl,
+        storyText,
+        sceneImageUrl,
+      }
+      if (target === 'feed') committedFeedItems.value.unshift(row)
+      else committedHouseItems.value.unshift(row)
+    }
+
+    try {
+      const blob = await fetch(url).then((r) => r.blob())
+      const imageUrl = URL.createObjectURL(blob)
+      pushRow(imageUrl)
+      revokePendingCapture()
+    } catch {
+      pushRow(url)
+      pendingCaptureObjectUrl.value = null
+    }
+  }
+
   return {
     currentId,
     pendingCaptureObjectUrl,
     draftItemTitle,
     draftStoryText,
     draftGalleryObjectUrls,
+    committedHouseItems,
+    committedFeedItems,
+    setCommitListTarget,
+    setAfterCardNavigation,
+    consumeAfterCardNavigation,
     setPendingCapture,
     revokePendingCapture,
     addDraftGalleryFile,
     revokeDraftGallery,
     setDraftStoryText,
     clearDraftStoryAndGallery,
+    commitCurrentItemFromCard,
+    findCommittedById,
   }
 })

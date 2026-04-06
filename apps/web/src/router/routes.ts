@@ -40,6 +40,18 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: '我的载体' },
   },
   {
+    path: '/carriers/directory',
+    name: 'carrier-directory',
+    component: () => import('../views/carrier/CarrierDirectory.vue'),
+    meta: { title: '载体清单' },
+  },
+  {
+    path: '/carriers/directory/change-avatar',
+    name: 'carrier-directory-avatar',
+    component: () => import('../views/onboarding/OnboardingAvatar.vue'),
+    meta: { title: '更换头像' },
+  },
+  {
     path: '/carriers/:id',
     name: 'carrier-editor',
     component: () => import('../views/carrier/CarrierEditor.vue'),
@@ -65,10 +77,22 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: '添加物品' },
   },
   {
+    path: '/items/carrier-feed',
+    name: 'carrier-item-feed',
+    component: () => import('../views/carrier/CarrierItemFeed.vue'),
+    meta: { title: '物品清单' },
+  },
+  {
     path: '/items/:id/ai',
     name: 'item-ai',
     component: () => import('../views/item/ItemAiChat.vue'),
     meta: { title: 'AI 对话' },
+  },
+  {
+    path: '/items/card/view/:committedId',
+    name: 'item-card-view',
+    component: () => import('../views/item/ItemCard.vue'),
+    meta: { title: '物品卡片' },
   },
   {
     path: '/items/:id/card',

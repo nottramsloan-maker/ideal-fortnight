@@ -1,24 +1,17 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { AVATAR_CELLS, avatarCellPickStyle } from '@/domain/avatarPresets'
 import refImg from '@/assets/figma/onboarding-avatar/reference.png'
+import imgDoneBtn from '@/assets/item-card-gen/btn-done.png'
 
 const router = useRouter()
+const route = useRoute()
 const user = useUserStore()
 
-/** 与 Figma「形象设置」Frame（390×844）内绝对坐标对齐 */
-const AVATAR_CELLS = [
-  { id: 'avatar-1', x: 29, y: 245 },
-  { id: 'avatar-2', x: 149, y: 245 },
-  { id: 'avatar-3', x: 271, y: 245 },
-  { id: 'avatar-4', x: 29, y: 371 },
-  { id: 'avatar-5', x: 149, y: 371 },
-  { id: 'avatar-6', x: 271, y: 371 },
-  { id: 'avatar-7', x: 29, y: 497 },
-  { id: 'avatar-8', x: 149, y: 497 },
-  { id: 'avatar-9', x: 271, y: 497 },
-] as const
+/** 从「我的小宝贝们」进入：同布局，底部 Done，回目录并更新头像 */
+const isChangeAvatarFlow = computed(() => route.name === 'carrier-directory-avatar')
 
 /** 矢量「下一步」图形在稿中的区域（node 150:1607） */
 const NEXT_SPRITE = { x: 144, y: 679, w: 87, h: 86 }
@@ -31,11 +24,7 @@ const selectedId = ref<string | null>(null)
 const canContinue = computed(() => selectedId.value != null)
 
 function cellStyle(x: number, y: number) {
-  return {
-    backgroundImage: `url(${refImg})`,
-    backgroundSize: `${FRAME_W}px ${FRAME_H}px`,
-    backgroundPosition: `-${x}px -${y}px`,
-  }
+  return avatarCellPickStyle(x, y)
 }
 
 /** 标题雪碧在稿中宽 73×22，左→右切段（仅用于裁剪，不改变字体图形） */
@@ -77,7 +66,11 @@ function select(id: string) {
 function continueNext() {
   if (!selectedId.value) return
   user.avatarPresetId = selectedId.value
-  router.push({ name: 'onboarding-carrier' })
+  if (isChangeAvatarFlow.value) {
+    void router.push({ name: 'carrier-directory' })
+  } else {
+    void router.push({ name: 'onboarding-carrier' })
+  }
 }
 
 const bodyPrevOverflow = ref('')
@@ -110,6 +103,10 @@ onMounted(() => {
     updateFrameScale()
   })
   window.addEventListener('resize', updateFrameScale)
+
+  if (isChangeAvatarFlow.value && user.avatarPresetId) {
+    selectedId.value = user.avatarPresetId
+  }
 
   const stepMs = 160
   const startDelayMs = 280
@@ -176,6 +173,17 @@ onUnmounted(() => {
 
         <div class="onboarding-avatar__footer">
           <button
+            v-if="isChangeAvatarFlow"
+            type="button"
+            class="onboarding-avatar__done"
+            :disabled="!canContinue"
+            aria-label="完成"
+            @click="continueNext"
+          >
+            <img :src="imgDoneBtn" alt="" class="onboarding-avatar__done-img" draggable="false" >
+          </button>
+          <button
+            v-else
             type="button"
             class="onboarding-avatar__next"
             :disabled="!canContinue"
@@ -333,6 +341,33 @@ onUnmounted(() => {
   display: block;
   background-repeat: no-repeat;
   image-rendering: -webkit-optimize-contrast;
+  transition: transform 0.1s ease;
+}
+
+.onboarding-avatar__done {
+  margin: 0;
+  padding: 16px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  -webkit-tap-highlight-color: transparent;
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):active .onboarding-avatar__done-img {
+    transform: scale(0.96);
+  }
+}
+
+.onboarding-avatar__done-img {
+  display: block;
+  width: min(60px, 21.6vw);
+  height: auto;
+  object-fit: contain;
   transition: transform 0.1s ease;
 }
 </style>

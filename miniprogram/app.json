@@ -1,6 +1,7 @@
 {
   "pages": ["pages/index/index", "pages/h5/h5"],
   "window": {
+    "navigationStyle": "custom",
     "navigationBarTitleText": "兴趣清单",
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTextStyle": "black",

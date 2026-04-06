@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useItemStore } from '@/stores/item'
+import { useCarrierStore } from '@/stores/carrier'
 import imgDotTile from '@/assets/item-card-gen/dot-tile.png'
-import imgListHero from '@/assets/carrier-list-hero.png'
+import imgFridge from '@/assets/carrier-directory/carrier-fridge.png'
+import imgShelf from '@/assets/carrier-directory/carrier-shelf.png'
+import imgBox from '@/assets/figma/onboarding-carrier/image-box.png'
+import imgMonitor from '@/assets/figma/onboarding-carrier/image-monitor.png'
+import imgRoomHero from '@/assets/carrier-list-hero.png'
 import imgToolGrid from '@/assets/carrier-toolbar-grid.png'
 import imgToolAdd from '@/assets/carrier-toolbar-add.png'
 import imgToolShare from '@/assets/carrier-toolbar-share.png'
@@ -12,10 +17,28 @@ import imgShareCardBg from '@/assets/share-card/card-bg.png'
 import imgShareClose from '@/assets/share-card/btn-close.png'
 import imgShareBtn from '@/assets/share-card/btn-share.png'
 import imgShareDownload from '@/assets/share-card/btn-download.png'
-
 const router = useRouter()
+const route = useRoute()
 const itemStore = useItemStore()
-const { committedHouseItems } = storeToRefs(itemStore)
+const carrierStore = useCarrierStore()
+const { committedFeedItems } = storeToRefs(itemStore)
+
+/** 与 onboarding 载体 key 对齐；顶部展示当前所选载体图 */
+const HERO_BY_KEY: Record<string, string> = {
+  fridge: imgFridge,
+  bookshelf: imgShelf,
+  box: imgBox,
+  monitor: imgMonitor,
+  room: imgRoomHero,
+}
+
+const heroSrc = computed(() => {
+  const q = route.query.carrier
+  const fromQ = typeof q === 'string' ? q : ''
+  const fromStore = carrierStore.onboardingTemplateKey || ''
+  const k = (fromQ || fromStore).trim()
+  return HERO_BY_KEY[k] ?? imgFridge
+})
 
 const bodyPrevOverflow = ref('')
 const shareModalOpen = ref(false)
@@ -60,9 +83,20 @@ function openCommittedCard(committedId: string) {
   void router.push({ name: 'item-card-view', params: { committedId } })
 }
 
+function carrierKeyForQuery(): string {
+  const q = route.query.carrier
+  const fromQ = typeof q === 'string' ? q : ''
+  const fromStore = carrierStore.onboardingTemplateKey || ''
+  return (fromQ || fromStore).trim()
+}
+
 function onAddItem() {
-  itemStore.setCommitListTarget('house')
-  itemStore.setAfterCardNavigation({ name: 'carrier-list' })
+  const carrier = carrierKeyForQuery()
+  itemStore.setCommitListTarget('feed')
+  itemStore.setAfterCardNavigation({
+    name: 'carrier-item-feed',
+    ...(carrier ? { query: { carrier } } : {}),
+  })
   void router.push({ name: 'item-new' })
 }
 
@@ -91,7 +125,7 @@ onUnmounted(() => {
           <div class="carrier-list__top">
             <div class="carrier-list__hero">
               <img
-                :src="imgListHero"
+                :src="heroSrc"
                 alt=""
                 class="carrier-list__house"
                 draggable="false"
@@ -146,13 +180,13 @@ onUnmounted(() => {
             </div>
             <div class="carrier-list__list-inner">
               <div
-                v-if="committedHouseItems.length"
+                v-if="committedFeedItems.length"
                 class="carrier-list__committed-grid"
                 role="list"
                 aria-label="已完成的物品"
               >
                 <button
-                  v-for="row in committedHouseItems"
+                  v-for="row in committedFeedItems"
                   :key="row.id"
                   type="button"
                   class="carrier-list__committed-cell"
@@ -395,6 +429,36 @@ onUnmounted(() => {
 .carrier-list__list-inner {
   position: relative;
   z-index: 1;
+}
+
+.carrier-list__block {
+  margin-bottom: 32px;
+}
+
+.carrier-list__block-title {
+  margin: 0;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #111;
+}
+
+.carrier-list__block-date {
+  margin: 4px 0 14px;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: #3a3a3a;
+}
+
+.carrier-list__icon-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
 }
 
 .carrier-list__committed-grid {
