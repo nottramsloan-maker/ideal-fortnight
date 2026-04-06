@@ -4,15 +4,15 @@ import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { useItemStore } from '@/stores/item'
 import { useCarrierStore } from '@/stores/carrier'
-import imgDotTile from '@/assets/item-card-gen/dot-tile.png'
+import imgListItemBg from '@card-assets/背景.png'
 import imgFridge from '@/assets/carrier-directory/carrier-fridge.png'
 import imgShelf from '@/assets/carrier-directory/carrier-shelf.png'
 import imgBox from '@/assets/figma/onboarding-carrier/image-box.png'
 import imgMonitor from '@/assets/figma/onboarding-carrier/image-monitor.png'
 import imgRoomHero from '@/assets/carrier-list-hero.png'
-import imgToolGrid from '@/assets/carrier-toolbar-grid.png'
-import imgToolAdd from '@/assets/carrier-toolbar-add.png'
-import imgToolShare from '@/assets/carrier-toolbar-share.png'
+import imgToolGrid from '@/assets/carrier-list-toolbar/grid.png'
+import imgToolAdd from '@/assets/carrier-list-toolbar/group-7.png'
+import imgToolShare from '@/assets/carrier-list-toolbar/share.png'
 import imgShareCardBg from '@/assets/share-card/card-bg.png'
 import imgShareClose from '@/assets/share-card/btn-close.png'
 import imgShareBtn from '@/assets/share-card/btn-share.png'
@@ -133,49 +133,55 @@ onUnmounted(() => {
             </div>
 
             <div class="carrier-list__toolbar" role="toolbar" aria-label="快捷操作">
-              <button
-                type="button"
-                class="carrier-list__tool-btn"
-                aria-label="载体清单"
-                @click="onOpenCarrierDirectory"
-              >
-                <img
-                  :src="imgToolGrid"
-                  alt=""
-                  class="carrier-list__tool-img carrier-list__tool-img--side"
-                  draggable="false"
+              <div class="carrier-list__toolbar-side carrier-list__toolbar-side--left">
+                <button
+                  type="button"
+                  class="carrier-list__tool-btn"
+                  aria-label="载体清单"
+                  @click="onOpenCarrierDirectory"
                 >
-              </button>
-              <button type="button" class="carrier-list__tool-btn" aria-label="添加" @click="onAddItem">
-                <img
-                  :src="imgToolAdd"
-                  alt=""
-                  class="carrier-list__tool-img carrier-list__tool-img--center"
-                  draggable="false"
+                  <img
+                    :src="imgToolGrid"
+                    alt=""
+                    class="carrier-list__tool-img carrier-list__tool-img--side"
+                    draggable="false"
+                  >
+                </button>
+              </div>
+              <div class="carrier-list__toolbar-center">
+                <button type="button" class="carrier-list__tool-btn" aria-label="添加" @click="onAddItem">
+                  <img
+                    :src="imgToolAdd"
+                    alt=""
+                    class="carrier-list__tool-img carrier-list__tool-img--center"
+                    draggable="false"
+                  >
+                </button>
+              </div>
+              <div class="carrier-list__toolbar-side carrier-list__toolbar-side--right">
+                <button
+                  type="button"
+                  class="carrier-list__tool-btn"
+                  aria-label="分享"
+                  @click="openShareModal"
                 >
-              </button>
-              <button
-                type="button"
-                class="carrier-list__tool-btn"
-                aria-label="分享"
-                @click="openShareModal"
-              >
-                <img
-                  :src="imgToolShare"
-                  alt=""
-                  class="carrier-list__tool-img carrier-list__tool-img--side"
-                  draggable="false"
-                >
-              </button>
+                  <img
+                    :src="imgToolShare"
+                    alt=""
+                    class="carrier-list__tool-img carrier-list__tool-img--side"
+                    draggable="false"
+                  >
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- 参考稿：灰点阵从工具栏下方开始，仅列表内容区 -->
+          <!-- 物品区：整段铺 背景.png，无物品时也占满首屏剩余高度 -->
           <div class="carrier-list__list-surface">
             <div class="carrier-list__list-dots" aria-hidden="true">
               <div
                 class="carrier-list__list-dots-layer"
-                :style="{ backgroundImage: `url(${imgDotTile})` }"
+                :style="{ backgroundImage: `url(${imgListItemBg})` }"
               />
             </div>
             <div class="carrier-list__list-inner">
@@ -195,13 +201,16 @@ onUnmounted(() => {
                   <div class="carrier-list__committed-thumb-wrap">
                     <img
                       :src="row.imageUrl"
-                      alt=""
+                      :alt="row.title"
                       class="carrier-list__committed-thumb"
                       draggable="false"
                     >
                   </div>
                   <p class="carrier-list__committed-date">
                     {{ row.date }}
+                  </p>
+                  <p class="carrier-list__committed-title">
+                    {{ row.title }}
                   </p>
                 </button>
               </div>
@@ -318,11 +327,15 @@ onUnmounted(() => {
 .carrier-list__scroll {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  min-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 20px 32px;
+  /* 整体下移 30px，减轻底部大块留白观感 */
+  padding: 30px 20px 32px;
   box-sizing: border-box;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -335,6 +348,7 @@ onUnmounted(() => {
 }
 
 .carrier-list__top {
+  flex-shrink: 0;
   background: #fff;
 }
 
@@ -360,9 +374,30 @@ onUnmounted(() => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 44px;
+  width: 100%;
   padding: 8px 0 28px;
+  box-sizing: border-box;
+}
+
+.carrier-list__toolbar-side {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+
+  &--left {
+    justify-content: flex-start;
+  }
+
+  &--right {
+    justify-content: flex-end;
+  }
+}
+
+.carrier-list__toolbar-center {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
 }
 
 .carrier-list__tool-btn {
@@ -390,22 +425,23 @@ onUnmounted(() => {
 }
 
 .carrier-list__tool-img--side {
-  width: 28px;
-  height: 28px;
+  width: calc(28px * 0.8);
+  height: calc(28px * 0.8);
 }
 
-/* 中间「添加」略大，贴近参考稿 */
+/* 中间「添加」略大；与两侧统一按原稿 ×0.8 */
 .carrier-list__tool-img--center {
-  width: 36px;
-  height: 36px;
+  width: calc(36px * 0.8);
+  height: calc(36px * 0.8);
 }
 
 .carrier-list__list-surface {
   position: relative;
+  flex: 1 1 auto;
   margin-left: -20px;
   margin-right: -20px;
   padding: 8px 20px 8px;
-  min-height: 120px;
+  min-height: min(360px, 50vh);
 }
 
 .carrier-list__list-dots {
@@ -419,11 +455,10 @@ onUnmounted(() => {
 .carrier-list__list-dots-layer {
   position: absolute;
   inset: 0;
-  background-repeat: repeat;
-  background-position: 0 0;
-  background-size: auto;
-  filter: invert(1);
-  opacity: 0.2;
+  background-color: #fff;
+  background-repeat: repeat-y;
+  background-position: center top;
+  background-size: 100% auto;
 }
 
 .carrier-list__list-inner {
@@ -489,7 +524,7 @@ onUnmounted(() => {
   aspect-ratio: 1;
   border-radius: 10px;
   overflow: hidden;
-  background: #f2f2f2;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -510,6 +545,22 @@ onUnmounted(() => {
   letter-spacing: 0.04em;
   color: #3a3a3a;
   line-height: 1.3;
+}
+
+.carrier-list__committed-title {
+  margin: 4px 0 0;
+  padding: 0 2px;
+  font-family: var(--font-family-app);
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* —— 分享卡片（参考 P1：蒙层 + 圆角卡 + 关闭 / 分享 / 下载）—— */
@@ -554,6 +605,8 @@ onUnmounted(() => {
   justify-content: center;
   pointer-events: auto;
   padding: 0 8px 8px;
+  /* 大卡与「分享」间距收 30px，大卡位置不变 */
+  margin-top: -30px;
 }
 
 .carrier-list-share__backdrop {
@@ -584,7 +637,7 @@ onUnmounted(() => {
 .carrier-list-share__card-wrap {
   position: relative;
   width: 100%;
-  border-radius: 18px;
+  border-radius: 48px;
   overflow: hidden;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
   line-height: 0;
@@ -664,7 +717,8 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  padding: 0 24px calc(20px + env(safe-area-inset-bottom, 0px));
+  /* 「分享」与下载间距收 30px，且不低于安全区 */
+  padding: 0 24px max(8px, calc(20px + env(safe-area-inset-bottom, 0px) - 30px));
   box-sizing: border-box;
   pointer-events: none;
 }
@@ -687,8 +741,8 @@ onUnmounted(() => {
 
 .carrier-list-share__download-dock-img {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: calc(32px * 0.7);
+  height: calc(32px * 0.7);
   object-fit: contain;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
 }

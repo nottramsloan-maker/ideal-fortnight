@@ -2,25 +2,27 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCarrierStore } from '@/stores/carrier'
-import img10 from '@/assets/figma/onboarding-carrier/image-10.png'
-import img11 from '@/assets/figma/onboarding-carrier/image-11.png'
-import img12 from '@/assets/figma/onboarding-carrier/image-12.png'
-import imgBox from '@/assets/figma/onboarding-carrier/image-box.png'
-import imgMonitor from '@/assets/figma/onboarding-carrier/image-monitor.png'
+import imgFridge from '@/assets/carrier-directory/carrier-fridge.png'
+import imgHouse from '@/assets/carrier-directory/carrier-house.png'
+import imgShelf from '@/assets/carrier-directory/carrier-shelf.png'
+import imgBox from '@/assets/carrier-directory/carrier-box.png'
+import imgMonitor from '@/assets/carrier-directory/carrier-monitor.png'
+import imgAdd from '@/assets/carrier-directory/btn-add.png'
 import refImg from '@/assets/figma/onboarding-avatar/reference.png'
 
 const router = useRouter()
 const carrierStore = useCarrierStore()
 
-/** 顺序：首屏只见前三项（冰箱、房间、书架），纸箱与显示器需横向滑动 */
-type CarrierPickKey = 'fridge' | 'room' | 'bookshelf' | 'box' | 'monitor'
+/** 顺序：首屏只见前三项（冰箱、房间、书架），纸箱、显示器、加号需横向滑动 */
+type CarrierPickKey = 'fridge' | 'room' | 'bookshelf' | 'box' | 'monitor' | 'add'
 
 const CARRIERS: { key: CarrierPickKey; label: string; src: string }[] = [
-  { key: 'fridge', label: '冰箱', src: img11 },
-  { key: 'room', label: '房间', src: img10 },
-  { key: 'bookshelf', label: '书架', src: img12 },
+  { key: 'fridge', label: '冰箱', src: imgFridge },
+  { key: 'room', label: '房间', src: imgHouse },
+  { key: 'bookshelf', label: '书架', src: imgShelf },
   { key: 'box', label: '纸箱', src: imgBox },
   { key: 'monitor', label: '显示器', src: imgMonitor },
+  { key: 'add', label: '添加载体', src: imgAdd },
 ]
 
 /** 默认居中「房间」 */
@@ -48,6 +50,11 @@ let titleRevealTimer: ReturnType<typeof setInterval> | undefined
 
 function continueNext() {
   if (!selectedKey.value) return
+  if (selectedKey.value === 'add') {
+    carrierStore.onboardingTemplateKey = null
+    void router.push({ name: 'carrier-directory' })
+    return
+  }
   carrierStore.onboardingTemplateKey = selectedKey.value
   /** 「房间」走拍照第一件物品；其余载体进入与物品清单同构的物件 list（顶图为所选载体） */
   if (selectedKey.value === 'room') {
@@ -204,7 +211,12 @@ onUnmounted(() => {
                 :aria-label="item.label"
                 @click="onSlideClick(i)"
               >
-                <img :src="item.src" alt="" class="onboarding-carrier__pick-img" >
+                <img
+                  :src="item.src"
+                  alt=""
+                  class="onboarding-carrier__pick-img"
+                  :class="{ 'onboarding-carrier__pick-img--add': item.key === 'add' }"
+                >
               </button>
             </div>
           </div>
@@ -333,6 +345,12 @@ $slide-gap: 12px;
   object-fit: contain;
   display: block;
   pointer-events: none;
+}
+
+/* 紫色加号：相对默认展示尺寸 ×0.6 */
+.onboarding-carrier__pick-img--add {
+  transform: scale(0.6);
+  transform-origin: center center;
 }
 
 .onboarding-carrier__pick--dimmed .onboarding-carrier__pick-img {

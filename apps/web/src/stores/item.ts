@@ -39,6 +39,10 @@ export const useItemStore = defineStore('item', () => {
   const draftStoryText = ref('')
   /** 对话中上传的附图（object URL 列表） */
   const draftGalleryObjectUrls = ref<string[]>([])
+  /** AI 对话里用户发送的每条文字（卡片第二屏还原气泡） */
+  const draftChatUserLines = ref<string[]>([])
+  /** 语音记录（object URL，有则第二屏显示语音条） */
+  const draftVoiceObjectUrl = ref<string | null>(null)
 
   /** 房子清单页：卡片完成后写入 */
   const committedHouseItems = ref<CarrierCommittedItem[]>([])
@@ -91,9 +95,27 @@ export const useItemStore = defineStore('item', () => {
     draftStoryText.value = text
   }
 
+  function setDraftChatUserLines(lines: string[]) {
+    draftChatUserLines.value = [...lines]
+  }
+
+  function revokeDraftVoice() {
+    if (draftVoiceObjectUrl.value) {
+      URL.revokeObjectURL(draftVoiceObjectUrl.value)
+      draftVoiceObjectUrl.value = null
+    }
+  }
+
+  function setDraftVoiceFromFile(file: File) {
+    revokeDraftVoice()
+    draftVoiceObjectUrl.value = URL.createObjectURL(file)
+  }
+
   function clearDraftStoryAndGallery() {
     draftStoryText.value = ''
+    draftChatUserLines.value = []
     revokeDraftGallery()
+    revokeDraftVoice()
   }
 
   /**
@@ -107,6 +129,20 @@ export const useItemStore = defineStore('item', () => {
       committedFeedItems.value.find((r) => r.id === id) ??
       null
     )
+  }
+
+  /** 载体清单已提交卡片：在查看页编辑故事正文后写回 */
+  function updateCommittedStoryText(id: string, storyText: string) {
+    if (!id) return
+    const patch = (list: CarrierCommittedItem[]) => {
+      const i = list.findIndex((r) => r.id === id)
+      if (i < 0) return false
+      const row = list[i]!
+      list.splice(i, 1, { ...row, storyText })
+      return true
+    }
+    if (patch(committedHouseItems.value)) return
+    patch(committedFeedItems.value)
   }
 
   async function commitCurrentItemFromCard() {
@@ -161,6 +197,8 @@ export const useItemStore = defineStore('item', () => {
     draftItemTitle,
     draftStoryText,
     draftGalleryObjectUrls,
+    draftChatUserLines,
+    draftVoiceObjectUrl,
     committedHouseItems,
     committedFeedItems,
     setCommitListTarget,
@@ -171,8 +209,12 @@ export const useItemStore = defineStore('item', () => {
     addDraftGalleryFile,
     revokeDraftGallery,
     setDraftStoryText,
+    setDraftChatUserLines,
+    setDraftVoiceFromFile,
+    revokeDraftVoice,
     clearDraftStoryAndGallery,
     commitCurrentItemFromCard,
     findCommittedById,
+    updateCommittedStoryText,
   }
 })

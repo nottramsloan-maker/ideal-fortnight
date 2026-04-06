@@ -5,14 +5,14 @@ import { useRouter } from 'vue-router'
 import { useCarrierStore } from '@/stores/carrier'
 import { useUserStore } from '@/stores/user'
 import { avatarPresetPreviewStyle } from '@/domain/avatarPresets'
-import imgDotTile from '@/assets/item-card-gen/dot-tile.png'
+import imgDirListBg from '@card-assets/背景.png'
 import imgAvatar from '@/assets/carrier-directory/avatar-beret.png'
 import imgDots from '@/assets/carrier-directory/pagination-dots.png'
 import imgHouse from '@/assets/carrier-directory/carrier-house.png'
 import imgFridge from '@/assets/carrier-directory/carrier-fridge.png'
 import imgShelf from '@/assets/carrier-directory/carrier-shelf.png'
-import imgBox from '@/assets/figma/onboarding-carrier/image-box.png'
-import imgMonitor from '@/assets/figma/onboarding-carrier/image-monitor.png'
+import imgBox from '@/assets/carrier-directory/carrier-box.png'
+import imgMonitor from '@/assets/carrier-directory/carrier-monitor.png'
 import imgAdd from '@/assets/carrier-directory/btn-add.png'
 
 const router = useRouter()
@@ -64,26 +64,39 @@ function openChangeAvatar() {
   void router.push({ name: 'carrier-directory-avatar' })
 }
 
+const titleText = '看看我现在有什么~'
+const titleChars = Array.from(titleText)
+const titleRevealCount = ref(0)
+let titleRevealTimer: ReturnType<typeof setInterval> | undefined
+
 onMounted(() => {
   bodyPrevOverflow.value = document.body.style.overflow
   document.body.style.overflow = 'hidden'
   window.scrollTo(0, 0)
+
+  const stepMs = 160
+  const startDelayMs = 280
+  window.setTimeout(() => {
+    titleRevealCount.value = 1
+    titleRevealTimer = window.setInterval(() => {
+      if (titleRevealCount.value < titleChars.length) {
+        titleRevealCount.value += 1
+      } else if (titleRevealTimer != null) {
+        clearInterval(titleRevealTimer)
+        titleRevealTimer = undefined
+      }
+    }, stepMs)
+  }, startDelayMs)
 })
 
 onUnmounted(() => {
+  if (titleRevealTimer != null) clearInterval(titleRevealTimer)
   document.body.style.overflow = bodyPrevOverflow.value
 })
 </script>
 
 <template>
   <div class="carrier-dir">
-    <div class="carrier-dir__bg" aria-hidden="true">
-      <div
-        class="carrier-dir__bg-dots"
-        :style="{ backgroundImage: `url(${imgDotTile})` }"
-      />
-    </div>
-
     <div class="carrier-dir__scroll">
       <header class="carrier-dir__header">
         <div
@@ -113,44 +126,60 @@ onUnmounted(() => {
             draggable="false"
           >
         </button>
-        <h1 class="carrier-dir__title">
-          我的小宝贝们
+        <h1 class="carrier-dir__title" :aria-label="titleText">
+          <span
+            v-for="(ch, i) in titleChars"
+            :key="i"
+            class="carrier-dir__title-char"
+            :class="{ 'carrier-dir__title-char--show': titleRevealCount > i }"
+          >{{ ch }}</span>
         </h1>
       </header>
 
-      <div class="carrier-dir__grid" role="list">
-        <button
-          type="button"
-          class="carrier-dir__tile"
-          aria-label="小屋载体"
-          @click="openHouseList"
-        >
-          <span class="carrier-dir__tile-scale">
-            <img :src="imgHouse" alt="" class="carrier-dir__tile-img" draggable="false" >
-          </span>
-        </button>
-        <button
-          v-for="tile in carrierTiles"
-          :key="tile.key"
-          type="button"
-          class="carrier-dir__tile"
-          :aria-label="tile.label"
-          @click="openCarrierItemFeed(tile.key)"
-        >
-          <span class="carrier-dir__tile-scale">
-            <img :src="tile.src" alt="" class="carrier-dir__tile-img" draggable="false" >
-          </span>
-        </button>
-        <button
-          type="button"
-          class="carrier-dir__tile carrier-dir__tile--add"
-          aria-label="添加载体"
-          @click="onAddCarrier"
-        >
-          <span class="carrier-dir__tile-scale carrier-dir__tile-scale--add">
-            <img :src="imgAdd" alt="" class="carrier-dir__tile-img carrier-dir__tile-img--add" draggable="false" >
-          </span>
-        </button>
+      <!-- 与房子/feed 载体清单：仅下半（网格区）铺 背景.png，结构同 carrier-list__list-surface -->
+      <div class="carrier-dir__list-surface">
+        <div class="carrier-dir__list-bg" aria-hidden="true">
+          <div
+            class="carrier-dir__list-bg-layer"
+            :style="{ backgroundImage: `url(${imgDirListBg})` }"
+          />
+        </div>
+        <div class="carrier-dir__list-inner">
+          <div class="carrier-dir__grid" role="list">
+            <button
+              type="button"
+              class="carrier-dir__tile"
+              aria-label="小屋载体"
+              @click="openHouseList"
+            >
+              <span class="carrier-dir__tile-scale">
+                <img :src="imgHouse" alt="" class="carrier-dir__tile-img" draggable="false" >
+              </span>
+            </button>
+            <button
+              v-for="tile in carrierTiles"
+              :key="tile.key"
+              type="button"
+              class="carrier-dir__tile"
+              :aria-label="tile.label"
+              @click="openCarrierItemFeed(tile.key)"
+            >
+              <span class="carrier-dir__tile-scale">
+                <img :src="tile.src" alt="" class="carrier-dir__tile-img" draggable="false" >
+              </span>
+            </button>
+            <button
+              type="button"
+              class="carrier-dir__tile carrier-dir__tile--add"
+              aria-label="添加载体"
+              @click="onAddCarrier"
+            >
+              <span class="carrier-dir__tile-scale carrier-dir__tile-scale--add">
+                <img :src="imgAdd" alt="" class="carrier-dir__tile-img carrier-dir__tile-img--add" draggable="false" >
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -170,32 +199,18 @@ $dir-purple: #8b7dff;
   overflow: hidden;
 }
 
-.carrier-dir__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: #fff;
-}
-
-.carrier-dir__bg-dots {
-  position: absolute;
-  inset: 0;
-  background-repeat: repeat;
-  background-position: 0 0;
-  background-size: auto;
-  filter: invert(1);
-  opacity: 0.18;
-}
-
 .carrier-dir__scroll {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  min-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: calc(16px + env(safe-area-inset-top, 0px)) 24px 40px;
+  /* 与 CarrierList 横向 20px 对齐；顶栏区仍白底 */
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 20px 40px;
   box-sizing: border-box;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -208,6 +223,7 @@ $dir-purple: #8b7dff;
 }
 
 .carrier-dir__header {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -215,12 +231,47 @@ $dir-purple: #8b7dff;
   margin-bottom: 36px;
 }
 
+/* 对齐 CarrierList 物品区：背景仅覆盖网格及以下；repeat-y 随区域高度向下无限铺 */
+.carrier-dir__list-surface {
+  position: relative;
+  flex: 1 0 auto;
+  align-self: stretch;
+  margin-left: -20px;
+  margin-right: -20px;
+  padding: 8px 20px 48px;
+  box-sizing: border-box;
+  /* 至少原稿高度，并尽量铺满视口剩余，避免底部大块留白；内容增高时整块变高 */
+  min-height: max(min(360px, 50vh), calc(100svh - 280px));
+}
+
+.carrier-dir__list-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: #fff;
+}
+
+.carrier-dir__list-bg-layer {
+  position: absolute;
+  inset: 0;
+  background-color: #fff;
+  background-repeat: repeat-y;
+  background-position: center top;
+  background-size: 100% auto;
+}
+
+.carrier-dir__list-inner {
+  position: relative;
+  z-index: 1;
+}
+
 .carrier-dir__avatar {
   display: block;
   width: min(112px, 30vw);
   height: auto;
   object-fit: contain;
-  margin-bottom: 14px;
+  margin-bottom: 6px;
 }
 
 .carrier-dir__avatar--preset {
@@ -230,7 +281,7 @@ $dir-purple: #8b7dff;
 }
 
 .carrier-dir__avatar-menu {
-  margin: 0 0 16px;
+  margin: 0 0 8px;
   padding: 6px 12px;
   border: none;
   background: transparent;
@@ -254,11 +305,30 @@ $dir-purple: #8b7dff;
 
 .carrier-dir__title {
   margin: 0;
-  font-family: 'KaiTi', 'STKaiti', 'BiauKai', 'Ma Shan Zheng', 'PingFang SC', var(--font-family-app);
+  max-width: 320px;
+  font-family: var(--font-family-app);
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.08em;
   color: #1a1a1a;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  line-height: 1.45;
+}
+
+.carrier-dir__title-char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.22s ease-out,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.carrier-dir__title-char--show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* 一排放两个：两列等宽，随屏宽伸缩 */

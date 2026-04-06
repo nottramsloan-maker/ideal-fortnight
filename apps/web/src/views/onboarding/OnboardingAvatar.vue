@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { AVATAR_CELLS, avatarCellPickStyle } from '@/domain/avatarPresets'
+import { AVATAR_CELLS } from '@/domain/avatarPresets'
 import refImg from '@/assets/figma/onboarding-avatar/reference.png'
 import imgDoneBtn from '@/assets/item-card-gen/btn-done.png'
 
@@ -22,10 +22,6 @@ const FRAME_H = 844
 const selectedId = ref<string | null>(null)
 
 const canContinue = computed(() => selectedId.value != null)
-
-function cellStyle(x: number, y: number) {
-  return avatarCellPickStyle(x, y)
-}
 
 /** 标题雪碧在稿中宽 73×22，左→右切段（仅用于裁剪，不改变字体图形） */
 const TITLE_SPRITE = { left: 164, top: 187, fullW: 73, h: 22 }
@@ -164,11 +160,17 @@ onUnmounted(() => {
               'onboarding-avatar__cell--dimmed':
                 selectedId != null && selectedId !== cell.id,
             }"
-            :style="cellStyle(cell.x, cell.y)"
             :aria-selected="selectedId === cell.id"
             role="option"
             @click="select(cell.id)"
-          />
+          >
+            <img
+              :src="cell.src"
+              alt=""
+              class="onboarding-avatar__cell-img"
+              draggable="false"
+            >
+          </button>
         </div>
 
         <div class="onboarding-avatar__footer">
@@ -290,7 +292,10 @@ onUnmounted(() => {
   border: none;
   border-radius: 0;
   cursor: pointer;
-  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   background-color: transparent;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.12s ease, opacity 0.15s ease;
@@ -302,6 +307,14 @@ onUnmounted(() => {
   &:active {
     transform: scale(0.96);
   }
+}
+
+.onboarding-avatar__cell-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .onboarding-avatar__footer {
